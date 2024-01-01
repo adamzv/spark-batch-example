@@ -17,11 +17,11 @@ public class Main {
 
         SparkSession spark = SparkSession.builder()
                 .appName("spark-example")
-                .master("local[*]")
+//                .master("local[*]")
                 .getOrCreate();
 
-        String dbUrl = "jdbc:mysql://localhost:3306/garbidz";
-//        String dbUrl = "jdbc:mysql://mysql:3306/garbidz";
+//        String dbUrl = "jdbc:mysql://localhost:3306/garbidz";
+        String dbUrl = "jdbc:mysql://mysql:3306/garbidz";
 
         Dataset<Row> addressDF = spark.read()
                 .format("jdbc")
@@ -30,8 +30,13 @@ public class Main {
                 .option("user", "garb")
                 .option("password", "garbidz")
                 .option("dbtable", "garbidz.address")
-                .option("fetchsize", "10000")
+                .option("fetchsize", "100")
                 .option("numPartitions", "10")
+                .option("partitionColumn", "id")
+                .option("lowerBound", "1000")
+                .option("upperBound", "8000")
+                // https://stackoverflow.com/questions/38905798/how-to-read-data-from-db-in-spark-in-parallel
+                
                 .load();
 
         Dataset<Row> townDF = spark.read()
@@ -79,6 +84,12 @@ public class Main {
                 .option("kafka.bootstrap.servers", "localhost:29092")
                 .option("topic", "spark")
                 .save();
+
+        try {
+            Thread.sleep(120000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         spark.stop();
     }
 }
